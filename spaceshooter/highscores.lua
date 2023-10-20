@@ -8,7 +8,47 @@ local scene = composer.newScene()
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
+-- Initialize variables
+local json = require( "json" )
+ 
+local scoresTable = {}
+ 
+local filePath = system.pathForFile( "scores.json", system.DocumentsDirectory )
 
+local function loadScores()
+ 
+    local file = io.open( filePath, "r" )
+ 
+    if file then
+        local contents = file:read( "*a" )
+        io.close( file )
+        scoresTable = json.decode( contents )
+    end
+ 
+    if ( scoresTable == nil or #scoresTable == 0 ) then
+        scoresTable = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+    end
+end
+
+local function saveScores()
+ 
+    for i = #scoresTable, 11, -1 do
+        table.remove( scoresTable, i )
+    end
+ 
+    local file = io.open( filePath, "w" )
+ 
+    if file then
+        file:write( json.encode( scoresTable ) )
+        io.close( file )
+    end
+end
+
+local function gotoMenu()
+    composer.gotoScene( "menu", { time=800, effect="crossFade" } )
+end
+
+local musicTrack
 
 
 -- -----------------------------------------------------------------------------------
@@ -21,6 +61,46 @@ function scene:create( event )
 	local sceneGroup = self.view
 	-- Code here runs when the scene is first created but has not yet appeared on screen
 
+	-- load the previous scores.
+	loadScores()
+
+	-- Insert the saved score from the last game into the table, then reset it
+    table.insert( scoresTable, composer.getVariable( "finalScore" ) )
+    composer.setVariable( "finalScore", 0 )
+
+	-- Sort the table entries from highest to lowest
+    local function compare( a, b )
+        return a > b
+    end
+    table.sort( scoresTable, compare )
+
+	-- Save the scores
+    saveScores()
+
+	local background = display.newImageRect( sceneGroup, "assets/img/bg-preview-big.png", 816, 480 )
+    background.x = display.contentCenterX
+    background.y = display.contentCenterY
+     
+    local highScoresHeader = display.newText( sceneGroup, "High Scores", display.contentCenterX, 50, native.systemFont, 44 )
+
+	for i = 1, 10 do
+        if ( scoresTable[i] ) then
+            local yPos = 75 + ( i * 25 )
+
+			local rankNum = display.newText( sceneGroup, i .. ")", display.contentCenterX-50, yPos, native.systemFont, 15 )
+            rankNum:setFillColor( 0.8 )
+            rankNum.anchorX = 1
+ 
+            local thisScore = display.newText( sceneGroup, scoresTable[i], display.contentCenterX-30, yPos, native.systemFont, 15 )
+            thisScore.anchorX = 0
+        end
+    end
+
+	local menuButton = display.newText( sceneGroup, "Menu", display.contentCenterX, 400, native.systemFont, 44 )
+    menuButton:setFillColor( 0.75, 0.78, 1 )
+    menuButton:addEventListener( "tap", gotoMenu )
+
+    musicTrack = audio.loadStream( "assets/mus/space-asteroids.ogg" )
 end
 
 
@@ -35,7 +115,8 @@ function scene:show( event )
 
 	elseif ( phase == "did" ) then
 		-- Code here runs when the scene is entirely on screen
-
+		-- start the music
+        audio.play(musicTrack, { channel = 1, loops = -1})
 	end
 end
 
@@ -52,6 +133,9 @@ function scene:hide( event )
 	elseif ( phase == "did" ) then
 		-- Code here runs immediately after the scene goes entirely off screen
 
+		-- stop the music
+        audio.stop(1)
+		composer.removeScene("highscores")
 	end
 end
 
@@ -61,7 +145,7 @@ function scene:destroy( event )
 
 	local sceneGroup = self.view
 	-- Code here runs prior to the removal of scene's view
-
+	audio.dispose( musicTrack )
 end
 
 
