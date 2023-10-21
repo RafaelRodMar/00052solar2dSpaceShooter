@@ -61,6 +61,7 @@ end
 
 -- function for creating asteroids
 local function createAsteroid()
+    if #asteroidsTable > 15 then return end
  
     local newAsteroid = display.newImage( mainGroup, "assets/img/asteroid.png" )
     table.insert( asteroidsTable, newAsteroid )
