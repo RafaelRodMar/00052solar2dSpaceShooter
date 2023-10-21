@@ -12,6 +12,8 @@ local physics = require( "physics" )
 physics.start()
 physics.setGravity( 0, 0 ) --in space gravity is 0
 
+local pressedKeys = {}
+
 -- Initialize variables
 local lives = 3
 local score = 0
@@ -62,7 +64,7 @@ local function createAsteroid()
  
     local newAsteroid = display.newImage( mainGroup, "assets/img/asteroid.png" )
     table.insert( asteroidsTable, newAsteroid )
-    physics.addBody( newAsteroid, "dynamic", { radius=40, bounce=0.8 } )
+    physics.addBody( newAsteroid, "dynamic", { radius=17, bounce=0.8 } )
     newAsteroid.myName = "asteroid"
 
     -- From the right
@@ -71,7 +73,8 @@ local function createAsteroid()
     newAsteroid:setLinearVelocity( -40,0 )
 
     -- set rotation
-    newAsteroid:applyTorque( math.random( -6,6 ) )
+    --newAsteroid:applyTorque( math.random( -6, 6 ) )
+    newAsteroid.angularVelocity = math.random(-50,50)
 
 end
 
@@ -97,9 +100,16 @@ end
 
 -- Function to handle key events
 local function onKeyEvent(event)
+    if event.phase == "down" then
+        pressedKeys[event.keyName] = true
+    else
+        pressedKeys[event.keyName] = false
+    end
+
     if event.keyName == "space" and event.phase == "down" then
         -- Code to execute when the "space" key is pressed
         fireLaser()
+        pressedKeys["space"] = false
         return true -- Return true to indicate that we handled the event
     end
     
@@ -114,34 +124,50 @@ local isMovingUp = false
 local isMovingDown = false
 
 -- Function to handle keyboard events
-local function onKeyPress(event)
-    if event.phase == "down" then
-        if event.keyName == "left" then
-            isMovingLeft = true
-            isMovingRight = false
-        elseif event.keyName == "right" then
-            isMovingRight = true
-            isMovingLeft = false
-        end
+-- local function onKeyPress(event)
+--     if event.phase == "down" then
+--         if event.keyName == "left" then
+--             isMovingLeft = true
+--             isMovingRight = false
+--         elseif event.keyName == "right" then
+--             isMovingRight = true
+--             isMovingLeft = false
+--         end
 
-		if event.keyName == "up" then
-			isMovingUp = true
-			isMovingDown = false
-		elseif event.keyName == "down" then
-			isMovingDown = true
-			isMovingUp = false
-		end
-    elseif event.phase == "up" then
-        if event.keyName == "left" then
-            isMovingLeft = false
-        elseif event.keyName == "right" then
-            isMovingRight = false
-		elseif event.keyName == "up" then
-			isMovingUp = false
-		elseif event.keyName == "down" then
-			isMovingDown = false
-        end
+-- 		if event.keyName == "up" then
+-- 			isMovingUp = true
+-- 			isMovingDown = false
+-- 		elseif event.keyName == "down" then
+-- 			isMovingDown = true
+-- 			isMovingUp = false
+-- 		end
+--     elseif event.phase == "up" then
+--         if event.keyName == "left" then
+--             isMovingLeft = false
+--         elseif event.keyName == "right" then
+--             isMovingRight = false
+-- 		elseif event.keyName == "up" then
+-- 			isMovingUp = false
+-- 		elseif event.keyName == "down" then
+-- 			isMovingDown = false
+--         end
+--     end
+-- end
+
+local function onEnterFrame(event)
+    if pressedKeys["space"] then
+        -- Code to execute when the "space" key is pressed
+        fireLaser()
     end
+
+    isMovingUp = false
+    isMovingDown = false
+    isMovingLeft = false
+    isMovingRight = false
+    if pressedKeys["up"] then isMovingUp = true end
+    if pressedKeys["down"] then isMovingDown = true end
+    if pressedKeys["left"] then isMovingLeft = true end
+    if pressedKeys["right"] then isMovingRight = true end
 end
 
 -- Function to update the object's position
@@ -153,7 +179,9 @@ local function updateObjectPosition()
     elseif isMovingRight then
         player.x = player.x + speed
         if player.x > display.contentWidth then player.x = display.contentWidth end
-	elseif isMovingUp then
+	end
+
+    if isMovingUp then
 		player.y = player.y - speed
 		if player.y < display.screenOriginY then player.y = display.screenOriginY end
 	elseif isMovingDown then
@@ -286,35 +314,36 @@ function scene:create( event )
 	background.x = display.contentCenterX
     background.y = display.contentCenterY
 
-    asteroid = display.newImage("assets/img/asteroid.png")
-    asteroidSmall = display.newImage("assets/img/asteroid-small.png")
-    explosion = display.newImage("assets/img/explosion.png")
+    --asteroid = display.newImage("assets/img/asteroid.png")
+    --asteroidSmall = display.newImage("assets/img/asteroid-small.png")
+    --explosion = display.newImage("assets/img/explosion.png")
     player = display.newImage("assets/img/player1.png")
 	player.x = display.screenOriginX + 20
     player.y = display.contentHeight / 2
 
-    physics.addBody( player, { radius=30, isSensor=true } )
+    physics.addBody( player, { radius=10, isSensor=true } )
     player.myName = "player"
 
-    playerDown = display.newImage("assets/img/player2.png")
-    playerUp = display.newImage("assets/img/player3.png")
-    shoot1 = display.newImage("assets/img/shoot1.png")
-    shoot2 = display.newImage("assets/img/shoot2.png")
-    enemy1 = display.newImage("assets/img/enemy1.png")
-    enemy2 = display.newImage("assets/img/enemy2.png")
-    enemy3 = display.newImage("assets/img/enemy3.png")
-    enemy4 = display.newImage("assets/img/enemy4.png")
-    enemy5 = display.newImage("assets/img/enemy5.png")
-    flash = display.newImage("assets/img/flash.png")
-    hit = display.newImage("assets/img/hit.png")
+    --playerDown = display.newImage("assets/img/player2.png")
+    -- playerUp = display.newImage("assets/img/player3.png")
+    -- shoot1 = display.newImage("assets/img/shoot1.png")
+    -- shoot2 = display.newImage("assets/img/shoot2.png")
+    -- enemy1 = display.newImage("assets/img/enemy1.png")
+    -- enemy2 = display.newImage("assets/img/enemy2.png")
+    -- enemy3 = display.newImage("assets/img/enemy3.png")
+    -- enemy4 = display.newImage("assets/img/enemy4.png")
+    -- enemy5 = display.newImage("assets/img/enemy5.png")
+    -- flash = display.newImage("assets/img/flash.png")
+    -- hit = display.newImage("assets/img/hit.png")
 
 	-- Display lives and score
-    livesText = display.newText( uiGroup, "Lives: " .. lives, 200, 80, native.systemFont, 36 )
-    scoreText = display.newText( uiGroup, "Score: " .. score, 400, 80, native.systemFont, 36 )
+    livesText = display.newText( uiGroup, "Lives: " .. lives, 100, 50, native.systemFont, 25 )
+    scoreText = display.newText( uiGroup, "Score: " .. score, 250, 50, native.systemFont, 25 )
 
 	-- Add the keyboard event listener
 	Runtime:addEventListener("key", onKeyEvent) -- laser
-	Runtime:addEventListener("key", onKeyPress) -- move the player
+	--Runtime:addEventListener("key", onKeyPress) -- move the player
+    Runtime:addEventListener("enterFrame", onEnterFrame)
 
 	-- load sounds and music
     explosionSound = audio.loadSound("assets/snd/explosion.wav")
