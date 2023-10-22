@@ -38,6 +38,25 @@ local asteroid
 local asteroidSmall
 local explosion
 
+-- sheetOptions for the explosions
+local explosionSheetOptions = 
+{
+    width = 32,
+    height = 32,
+    numFrames = 6
+}
+
+-- sequences table for explosions
+local explosionSequences = 
+{
+    name = "explosion",
+    start = 1,
+    count = 6,
+    time = 800,
+    loopCount = 1,
+    loopDirection = "forward"
+}
+
 -- create a display group for the ship
 local player = display.newGroup()
 
@@ -74,7 +93,7 @@ local function createAsteroid()
     -- From the right
     newAsteroid.x = display.contentWidth + 60
     newAsteroid.y = math.random( 480 )
-    newAsteroid:setLinearVelocity( -40,0 )
+    newAsteroid:setLinearVelocity( math.random(-40,-30), 0 )
 
     -- set rotation
     --newAsteroid:applyTorque( math.random( -6, 6 ) )
@@ -280,6 +299,11 @@ local function onCollision( event )
 
             -- play explosion sound
             audio.play( explosionSound )
+            -- show explosion
+            local exp = display.newSprite(mainGroup, explosion, explosionSequences)
+            exp.x = obj1.x
+            exp.y = obj1.y
+            exp:play()
 
             --search the asteroid in the table and remove it.
             for i = #asteroidsTable, 1, -1 do
@@ -349,6 +373,8 @@ function scene:create( event )
     --asteroid = display.newImage("assets/img/asteroid.png")
     --asteroidSmall = display.newImage("assets/img/asteroid-small.png")
     --explosion = display.newImage("assets/img/explosion.png")
+    -- create the animation for the explosion
+    explosion = graphics.newImageSheet("assets/img/explosion.png", explosionSheetOptions)
 
     -- load the three images of the ship
     playerNormal = display.newImage("assets/img/player1.png")
