@@ -10,6 +10,8 @@ math.randomseed( os.time() )
 audio.reserveChannels( 1 )
 -- reduce the overall volume of the channel
 audio.setVolume( 0.2, { channel = 1 })
+-- set the volume for all
+audio.setVolume( 0.1 )
  
 -- Go to the menu screen
 composer.gotoScene( "menu" )

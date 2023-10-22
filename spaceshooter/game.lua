@@ -22,7 +22,7 @@ local died = false
 local asteroidsTable = {}
  
 -- images
-local player
+local playerNormal
 local playerDown
 local playerUp
 local shoot1
@@ -37,6 +37,9 @@ local hit
 local asteroid
 local asteroidSmall
 local explosion
+
+-- create a display group for the ship
+local player = display.newGroup()
 
 local gameLoopTimer
 local livesText
@@ -155,18 +158,46 @@ local isMovingDown = false
 --     end
 -- end
 
+-- function to switch ship image when the up button is pressed
+local function switchPlayerUp()
+    playerNormal.isVisible = false
+    playerUp.isVisible = true
+    playerDown.isVisible = false
+end
+
+-- function to switch ship image when the down button is pressed
+local function switchPlayerDown()
+    playerNormal.isVisible = false
+    playerUp.isVisible = false
+    playerDown.isVisible = true
+end
+
+-- function to reset the player image when buttons are released
+local function resetPlayerImage()
+    playerNormal.isVisible = true
+    playerUp.isVisible = false
+    playerDown.isVisible = false
+end
+
 local function onEnterFrame(event)
     if pressedKeys["space"] then
         -- Code to execute when the "space" key is pressed
         fireLaser()
     end
 
+    resetPlayerImage()
     isMovingUp = false
     isMovingDown = false
     isMovingLeft = false
     isMovingRight = false
-    if pressedKeys["up"] then isMovingUp = true end
-    if pressedKeys["down"] then isMovingDown = true end
+    if pressedKeys["up"] then 
+        isMovingUp = true 
+        switchPlayerUp()
+    end
+    if pressedKeys["down"] then 
+        isMovingDown = true 
+        switchPlayerDown()
+    end
     if pressedKeys["left"] then isMovingLeft = true end
     if pressedKeys["right"] then isMovingRight = true end
 end
@@ -318,15 +349,25 @@ function scene:create( event )
     --asteroid = display.newImage("assets/img/asteroid.png")
     --asteroidSmall = display.newImage("assets/img/asteroid-small.png")
     --explosion = display.newImage("assets/img/explosion.png")
-    player = display.newImage("assets/img/player1.png")
-	player.x = display.screenOriginX + 20
-    player.y = display.contentHeight / 2
 
-    physics.addBody( player, { radius=10, isSensor=true } )
+    -- load the three images of the ship
+    playerNormal = display.newImage("assets/img/player1.png")
+    playerDown = display.newImage("assets/img/player2.png")
+    playerUp = display.newImage("assets/img/player3.png")
+
+    -- only the normal player is visible.
+    player:insert(playerNormal)
+    player:insert(playerUp)
+    player:insert(playerDown)
+    playerNormal.isVisible = true
+    playerUp.isVisible = false
+    playerDown.isVisible = false
+
+    physics.addBody( player, { radius= 10, isSensor = true})
+    player.x = display.screenOriginX + 20
+    player.y = display.contentHeight / 2
     player.myName = "player"
 
-    --playerDown = display.newImage("assets/img/player2.png")
-    -- playerUp = display.newImage("assets/img/player3.png")
     -- shoot1 = display.newImage("assets/img/shoot1.png")
     -- shoot2 = display.newImage("assets/img/shoot2.png")
     -- enemy1 = display.newImage("assets/img/enemy1.png")
