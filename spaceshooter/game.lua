@@ -327,6 +327,11 @@ local function onCollision( event )
 
                 -- play explosion sound
                 audio.play( explosionSound )
+                -- show explosion
+                local exp = display.newSprite(mainGroup, explosion, explosionSequences)
+                exp.x = obj1.x
+                exp.y = obj1.y
+                exp:play()
 
                 -- Update lives
                 lives = lives - 1
