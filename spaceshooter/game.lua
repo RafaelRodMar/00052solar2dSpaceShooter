@@ -110,13 +110,13 @@ local function createEnemy()
     local newEnemy = display.newImage( mainGroup, "assets/img/enemy1.png")
 
     table.insert(enemiesTable, newEnemy)
-    physics.addBody(newEnemy, "dynamic", { radius=14, bounce = 0.8})
+    physics.addBody(newEnemy, "dynamic", { radius=14, bounce = 0.1})
     newEnemy.myName = "enemy"
 
     -- from the right
     newEnemy.x = display.contentWidth + 60
     newEnemy.y = math.random(480)
-    newEnemy:setLinearVelocity(math.random(-50,-40),0)
+    newEnemy:setLinearVelocity(math.random(-80,-50),0)
 end
 
 -- function for creating a laser objects
