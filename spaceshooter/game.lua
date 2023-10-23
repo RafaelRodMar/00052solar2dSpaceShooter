@@ -20,6 +20,7 @@ local score = 0
 local died = false
  
 local asteroidsTable = {}
+local enemiesTable = {}
  
 -- images
 local playerNormal
@@ -102,6 +103,22 @@ local function createAsteroid()
 
 end
 
+-- function for creating enemies
+local function createEnemy()
+    if #enemiesTable > 2 then return end
+
+    local newEnemy = display.newImage( mainGroup, "assets/img/enemy1.png")
+
+    table.insert(enemiesTable, newEnemy)
+    physics.addBody(newEnemy, "dynamic", { radius=14, bounce = 0.8})
+    newEnemy.myName = "enemy"
+
+    -- from the right
+    newEnemy.x = display.contentWidth + 60
+    newEnemy.y = math.random(480)
+    newEnemy:setLinearVelocity(math.random(-50,-40),0)
+end
+
 -- function for creating a laser objects
 local function fireLaser()
  
@@ -146,37 +163,6 @@ local isMovingLeft = false
 local isMovingRight = false
 local isMovingUp = false
 local isMovingDown = false
-
--- Function to handle keyboard events
--- local function onKeyPress(event)
---     if event.phase == "down" then
---         if event.keyName == "left" then
---             isMovingLeft = true
---             isMovingRight = false
---         elseif event.keyName == "right" then
---             isMovingRight = true
---             isMovingLeft = false
---         end
-
--- 		if event.keyName == "up" then
--- 			isMovingUp = true
--- 			isMovingDown = false
--- 		elseif event.keyName == "down" then
--- 			isMovingDown = true
--- 			isMovingUp = false
--- 		end
---     elseif event.phase == "up" then
---         if event.keyName == "left" then
---             isMovingLeft = false
---         elseif event.keyName == "right" then
---             isMovingRight = false
--- 		elseif event.keyName == "up" then
--- 			isMovingUp = false
--- 		elseif event.keyName == "down" then
--- 			isMovingDown = false
---         end
---     end
--- end
 
 -- function to switch ship image when the up button is pressed
 local function switchPlayerUp()
@@ -257,6 +243,23 @@ local function gameLoop()
         then
             display.remove( thisAsteroid )
             table.remove( asteroidsTable, i )
+        end
+    end
+
+    -- Create new enemy
+    createEnemy()
+
+    -- Remove enemies which have drifted off screen
+    for i = #enemiesTable, 1, -1 do
+        local thisEnemy = enemiesTable[i]
+ 
+        if ( thisEnemy.x < -100 or
+             thisEnemy.x > display.contentWidth + 100 or
+             thisEnemy.y < -100 or
+             thisEnemy.y > display.contentHeight + 100 )
+        then
+            display.remove( thisEnemy )
+            table.remove( enemiesTable, i )
         end
     end
 end
@@ -345,6 +348,62 @@ local function onCollision( event )
                     timer.performWithDelay( 1000, restoreShip )
                 end
             end
+
+        --player and enemy
+        elseif ( ( obj1.myName == "player" and obj2.myName == "enemy" ) or
+        ( obj1.myName == "enemy" and obj2.myName == "player" ) )
+        then
+            if ( died == false ) then
+                died = true
+
+                -- play explosion sound
+                audio.play( explosionSound )
+                -- show explosion
+                local exp = display.newSprite(mainGroup, explosion, explosionSequences)
+                exp.x = obj1.x
+                exp.y = obj1.y
+                exp:play()
+
+                -- Update lives
+                lives = lives - 1
+                livesText.text = "Lives: " .. lives
+
+                if ( lives == 0 ) then
+                    display.remove( player )
+					timer.performWithDelay( 2000, endGame )
+                else
+                    player.alpha = 0
+                    timer.performWithDelay( 1000, restoreShip )
+                end
+            end
+        
+        -- enemies and lasers
+        elseif ( ( obj1.myName == "laser" and obj2.myName == "enemy" ) or
+             ( obj1.myName == "enemy" and obj2.myName == "laser" ) )
+        then
+            -- Remove both the laser and asteroid
+            display.remove( obj1 )
+            display.remove( obj2 )
+
+            -- play explosion sound
+            audio.play( explosionSound )
+            -- show explosion
+            local exp = display.newSprite(mainGroup, explosion, explosionSequences)
+            exp.x = obj1.x
+            exp.y = obj1.y
+            exp:play()
+
+            --search the asteroid in the table and remove it.
+            for i = #enemiesTable, 1, -1 do
+                if ( enemiesTable[i] == obj1 or enemiesTable[i] == obj2 ) then
+                    table.remove( enemiesTable, i )
+                    break
+                end
+            end
+
+            -- Increase score
+            score = score + 100
+            scoreText.text = "Score: " .. score
         end
     end
 end
@@ -376,9 +435,6 @@ function scene:create( event )
 	background.x = display.contentCenterX
     background.y = display.contentCenterY
 
-    --asteroid = display.newImage("assets/img/asteroid.png")
-    --asteroidSmall = display.newImage("assets/img/asteroid-small.png")
-    --explosion = display.newImage("assets/img/explosion.png")
     -- create the animation for the explosion
     explosion = graphics.newImageSheet("assets/img/explosion.png", explosionSheetOptions)
 
@@ -399,16 +455,6 @@ function scene:create( event )
     player.x = display.screenOriginX + 20
     player.y = display.contentHeight / 2
     player.myName = "player"
-
-    -- shoot1 = display.newImage("assets/img/shoot1.png")
-    -- shoot2 = display.newImage("assets/img/shoot2.png")
-    -- enemy1 = display.newImage("assets/img/enemy1.png")
-    -- enemy2 = display.newImage("assets/img/enemy2.png")
-    -- enemy3 = display.newImage("assets/img/enemy3.png")
-    -- enemy4 = display.newImage("assets/img/enemy4.png")
-    -- enemy5 = display.newImage("assets/img/enemy5.png")
-    -- flash = display.newImage("assets/img/flash.png")
-    -- hit = display.newImage("assets/img/hit.png")
 
 	-- Display lives and score
     livesText = display.newText( uiGroup, "Lives: " .. lives, 100, 50, native.systemFont, 25 )
